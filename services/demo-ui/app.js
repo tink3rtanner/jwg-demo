@@ -160,6 +160,93 @@ async function executeQueryResources() {
 }
 
 
+let publishBundleData = null;
+
+function loadPublishBundle() {
+    const fileInput = document.getElementById('publish-file');
+    if (!fileInput.files[0]) return;
+    
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            publishBundleData = JSON.parse(e.target.result);
+            document.getElementById('publish-bundle-preview').textContent = JSON.stringify(publishBundleData, null, 2);
+        } catch (error) {
+            alert('Invalid JSON file: ' + error.message);
+            publishBundleData = null;
+        }
+    };
+    
+    reader.readAsText(file);
+}
+
+async function executePublishDocument() {
+    if (!publishBundleData) {
+        alert('Please select a JSON file containing a FHIR Bundle');
+        return;
+    }
+    
+    setStatus('publish-status', 'pending', 'Publishing...');
+    const resultDiv = document.getElementById('publish-result');
+    resultDiv.style.display = 'none';
+    
+    try {
+        const response = await fetch(`${FHIR_BASE}/fhir`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/fhir+json'
+            },
+            body: JSON.stringify(publishBundleData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            setStatus('publish-status', 'success', `✓ ${response.status} - Document Published`);
+            document.getElementById('publish-curl').textContent = `curl -X POST ${FHIR_BASE}/fhir \\
+  -H "Content-Type: application/fhir+json" \\
+  -d @bundle.json`;
+            document.getElementById('publish-response').textContent = JSON.stringify(data, null, 2);
+            resultDiv.style.display = 'grid';
+            
+            // Update checklist
+            const checklist = document.getElementById('publish-checklist');
+            if (data.resourceType === 'Bundle') {
+                checklist.querySelectorAll('li').forEach((item, idx) => {
+                    if (idx < 4) item.classList.add('checked');
+                });
+            }
+            
+            // Verify document appears in queries
+            setTimeout(async () => {
+                if (publishBundleData.entry) {
+                    const docRef = publishBundleData.entry.find(e => 
+                        e.resource && e.resource.resourceType === 'DocumentReference'
+                    );
+                    if (docRef && docRef.resource.subject) {
+                        const patientRef = docRef.resource.subject.reference;
+                        const docQuery = await fetch(`${FHIR_BASE}/fhir/DocumentReference?patient=${patientRef}&status=current`);
+                        if (docQuery.ok) {
+                            const docData = await docQuery.json();
+                            if (docData.entry && docData.entry.length > 0) {
+                                checklist.querySelectorAll('li')[4].classList.add('checked');
+                            }
+                        }
+                    }
+                }
+            }, 1000);
+        } else {
+            setStatus('publish-status', 'error', `✗ ${response.status} - ${data.detail || 'Publish failed'}`);
+            document.getElementById('publish-response').textContent = JSON.stringify(data, null, 2);
+            resultDiv.style.display = 'grid';
+        }
+    } catch (error) {
+        setStatus('publish-status', 'error', `✗ ${error.message}`);
+    }
+}
+
 // Initialize mermaid on load
 window.addEventListener('load', () => {
     mermaid.init(undefined, '#inspect-diagram');

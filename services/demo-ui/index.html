@@ -186,7 +186,8 @@
         <div class="tabs">
             <div class="tab active" onclick="showTab('inspect')">Capability Discovery</div>
             <div class="tab" onclick="showTab('find-patient')">Patient Match (PDQm/PIXm)</div>
-            <div class="tab" onclick="showTab('documents')">Document Exchange (MHD)</div>
+            <div class="tab" onclick="showTab('documents')">Document Consumer (MHD ITI-67/68)</div>
+            <div class="tab" onclick="showTab('document-producer')">Document Producer (MHD ITI-65)</div>
             <div class="tab" onclick="showTab('resources')">Resource Access (QEDm)</div>
         </div>
 
@@ -283,11 +284,11 @@
             </div>
         </div>
 
-        <!-- Documents -->
+        <!-- Document Consumer -->
         <div id="documents" class="tab-content">
             <div class="flow-section">
-                <h2>Document Exchange (MHD)</h2>
-                <p>Document exchange using IHE MHD transactions. ITI-67: Find Document References. ITI-68: Retrieve Document.</p>
+                <h2>Document Consumer (MHD ITI-67, ITI-68)</h2>
+                <p>Document Consumer queries and retrieves documents from Document Access Provider. ITI-67: Find Document References. ITI-68: Retrieve Document.</p>
                 
                 <div class="mermaid" id="documents-diagram">
                     sequenceDiagram
@@ -314,6 +315,102 @@
                         <h3>Response</h3>
                         <pre id="documents-response"></pre>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Producer -->
+        <div id="document-producer" class="tab-content">
+            <div class="flow-section">
+                <h2>Document Producer (MHD ITI-65)</h2>
+                <p>Document Producer publishes documents to Document Access Provider. ITI-65: Provide Document Bundle.</p>
+                
+                <div class="mermaid" id="document-producer-diagram">
+                    sequenceDiagram
+                        participant P as Document Producer
+                        participant A as Document Access Provider
+                        P->>A: POST / (Bundle with DocumentReference + Binary) (ITI-65)
+                        A-->>P: Bundle (created resources)
+                        Note over A: Document now available<br/>for Document Consumers
+                </div>
+
+                <div>
+                    <h3>Publish Document</h3>
+                    <p>Publish a new document by uploading a FHIR Bundle containing DocumentReference and Binary resources.</p>
+                    <input type="file" id="publish-file" accept=".json" onchange="loadPublishBundle()">
+                    <button onclick="executePublishDocument()">Publish Document (ITI-65)</button>
+                    <span id="publish-status"></span>
+                </div>
+
+                <div class="request-response" id="publish-result" style="display: none;">
+                    <div class="panel">
+                        <h3>Request</h3>
+                        <div class="curl-box" id="publish-curl"></div>
+                        <h4>Bundle Preview</h4>
+                        <pre id="publish-bundle-preview"></pre>
+                    </div>
+                    <div class="panel">
+                        <h3>Response</h3>
+                        <pre id="publish-response"></pre>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Example Bundle Structure</h3>
+                    <pre id="example-bundle-structure">{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "DocumentReference"
+      },
+      "resource": {
+        "resourceType": "DocumentReference",
+        "status": "current",
+        "type": {
+          "coding": [{
+            "system": "http://loinc.org",
+            "code": "60591-5",
+            "display": "Patient summary Document"
+          }]
+        },
+        "subject": {
+          "reference": "Patient/{patient-id}"
+        },
+        "content": [{
+          "attachment": {
+            "contentType": "application/fhir+json",
+            "url": "Binary/{binary-id}"
+          }
+        }]
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "Binary"
+      },
+      "resource": {
+        "resourceType": "Binary",
+        "contentType": "application/fhir+json",
+        "data": "base64encodeddata"
+      }
+    }
+  ]
+}</pre>
+                </div>
+
+                <div class="panel">
+                    <h3>Conformance Checklist</h3>
+                    <ul class="checklist" id="publish-checklist">
+                        <li>ITI-65 uses POST / with Bundle</li>
+                        <li>Bundle contains DocumentReference</li>
+                        <li>Bundle contains Binary</li>
+                        <li>DocumentReference references Binary</li>
+                        <li>Published document appears in ITI-67 queries</li>
+                    </ul>
                 </div>
             </div>
         </div>
