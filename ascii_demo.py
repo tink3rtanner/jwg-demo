@@ -1047,15 +1047,27 @@ def interactive_menu():
 # Entry Point
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def run_mock_demo(animated: bool = True):
-    """Run demo with mock data for visual testing"""
+def run_mock_demo(animated: bool = True, scenario: str = "success"):
+    """Run demo with mock data for visual testing
+    
+    Scenarios:
+        - success: All tests pass
+        - failure: Some tests fail
+        - mixed: Mix of pass/fail/skip
+    """
     
     clear_screen()
     print_claude_header()
     
     suite = TestSuite(name="EU Health Data API Tests")
     
-    print(f"  {Style.GRAY}Running in MOCK mode for visual testing...{Style.RESET}")
+    scenario_labels = {
+        "success": f"{Style.SUCCESS}SUCCESS{Style.RESET}",
+        "failure": f"{Style.ERROR}FAILURE{Style.RESET}",
+        "mixed": f"{Style.WARNING}MIXED{Style.RESET}",
+    }
+    
+    print(f"  {Style.GRAY}Running in MOCK mode ({scenario_labels.get(scenario, scenario)})...{Style.RESET}")
     print()
     
     if animated:
@@ -1069,16 +1081,34 @@ def run_mock_demo(animated: bool = True):
     if animated:
         bounce_animation("Testing CapabilityStatement...", 0.4)
     
-    mock_cap_results = [
-        TestResult("GET /metadata", TestStatus.PASSED, 45.2, "Status: 200"),
-        TestResult("ResourceType is CapabilityStatement", TestStatus.PASSED),
-        TestResult("FHIR Version is 4.0.1", TestStatus.PASSED),
-        TestResult("Priority areas declared (instantiates)", TestStatus.PASSED, message="2 priority area(s)"),
-        TestResult("DocumentReference resource declared", TestStatus.PASSED),
-        TestResult("Binary resource declared", TestStatus.PASSED),
-        TestResult("Patient resource declared", TestStatus.PASSED),
-        TestResult("Condition resource declared", TestStatus.PASSED),
-    ]
+    if scenario == "failure":
+        mock_cap_results = [
+            TestResult("GET /metadata", TestStatus.FAILED, 45.2, "Connection refused"),
+            TestResult("ResourceType is CapabilityStatement", TestStatus.SKIPPED, message="Skipped due to connection error"),
+        ]
+    elif scenario == "mixed":
+        mock_cap_results = [
+            TestResult("GET /metadata", TestStatus.PASSED, 45.2, "Status: 200"),
+            TestResult("ResourceType is CapabilityStatement", TestStatus.PASSED),
+            TestResult("FHIR Version is 4.0.1", TestStatus.FAILED, message="Got: 4.0.0"),
+            TestResult("Priority areas declared (instantiates)", TestStatus.PASSED, message="2 priority area(s)"),
+            TestResult("DocumentReference resource declared", TestStatus.PASSED),
+            TestResult("Binary resource declared", TestStatus.FAILED, message="Not found in CapabilityStatement"),
+            TestResult("Patient resource declared", TestStatus.PASSED),
+            TestResult("Condition resource declared", TestStatus.PASSED),
+        ]
+    else:  # success
+        mock_cap_results = [
+            TestResult("GET /metadata", TestStatus.PASSED, 45.2, "Status: 200"),
+            TestResult("ResourceType is CapabilityStatement", TestStatus.PASSED),
+            TestResult("FHIR Version is 4.0.1", TestStatus.PASSED),
+            TestResult("Priority areas declared (instantiates)", TestStatus.PASSED, message="2 priority area(s)"),
+            TestResult("DocumentReference resource declared", TestStatus.PASSED),
+            TestResult("Binary resource declared", TestStatus.PASSED),
+            TestResult("Patient resource declared", TestStatus.PASSED),
+            TestResult("Condition resource declared", TestStatus.PASSED),
+        ]
+    
     for r in mock_cap_results:
         print_test_result(r)
         suite.results.append(r)
@@ -1088,28 +1118,56 @@ def run_mock_demo(animated: bool = True):
     if animated:
         bounce_animation("Testing patient search...", 0.4)
     
-    mock_patient_results = [
-        TestResult("GET /Patient?identifier=...", TestStatus.PASSED, 62.1, "Status: 200"),
-        TestResult("Returns FHIR Bundle", TestStatus.PASSED),
-        TestResult("Patient found in Bundle", TestStatus.PASSED, message="ID: patient-a"),
-    ]
+    if scenario == "failure":
+        mock_patient_results = [
+            TestResult("GET /Patient?identifier=...", TestStatus.FAILED, 62.1, "Status: 500"),
+            TestResult("Returns FHIR Bundle", TestStatus.SKIPPED),
+            TestResult("Patient found in Bundle", TestStatus.SKIPPED),
+        ]
+    elif scenario == "mixed":
+        mock_patient_results = [
+            TestResult("GET /Patient?identifier=...", TestStatus.PASSED, 62.1, "Status: 200"),
+            TestResult("Returns FHIR Bundle", TestStatus.PASSED),
+            TestResult("Patient found in Bundle", TestStatus.FAILED, message="Empty bundle"),
+        ]
+    else:
+        mock_patient_results = [
+            TestResult("GET /Patient?identifier=...", TestStatus.PASSED, 62.1, "Status: 200"),
+            TestResult("Returns FHIR Bundle", TestStatus.PASSED),
+            TestResult("Patient found in Bundle", TestStatus.PASSED, message="ID: patient-a"),
+        ]
+    
     for r in mock_patient_results:
         print_test_result(r)
         suite.results.append(r)
     
-    print(f"\n    {Style.DIM}Using patient: {Style.CYAN}patient-a{Style.RESET}")
+    if scenario not in ["failure"]:
+        print(f"\n    {Style.DIM}Using patient: {Style.CYAN}patient-a{Style.RESET}")
     
     # Mock Document Exchange
     print_section_header("3. Document Exchange (MHD)", "◆", Style.CORAL)
     if animated:
         bounce_animation("Testing document queries...", 0.4)
     
-    mock_doc_results = [
-        TestResult("ITI-67: Find DocumentReferences", TestStatus.PASSED, 78.3, "Found 2 document(s)"),
-        TestResult("DocumentReference has status=current", TestStatus.PASSED),
-        TestResult("DocumentReference has Binary URL", TestStatus.PASSED, message="Binary/eps-binary-a"),
-        TestResult("ITI-68: Retrieve Binary", TestStatus.PASSED, 34.1),
-    ]
+    if scenario == "failure":
+        mock_doc_results = [
+            TestResult("ITI-67: Find DocumentReferences", TestStatus.SKIPPED, message="No patient ID available"),
+        ]
+    elif scenario == "mixed":
+        mock_doc_results = [
+            TestResult("ITI-67: Find DocumentReferences", TestStatus.PASSED, 78.3, "Found 2 document(s)"),
+            TestResult("DocumentReference has status=current", TestStatus.PASSED),
+            TestResult("DocumentReference has Binary URL", TestStatus.PASSED, message="Binary/eps-binary-a"),
+            TestResult("ITI-68: Retrieve Binary", TestStatus.FAILED, 134.1, "Status: 404"),
+        ]
+    else:
+        mock_doc_results = [
+            TestResult("ITI-67: Find DocumentReferences", TestStatus.PASSED, 78.3, "Found 2 document(s)"),
+            TestResult("DocumentReference has status=current", TestStatus.PASSED),
+            TestResult("DocumentReference has Binary URL", TestStatus.PASSED, message="Binary/eps-binary-a"),
+            TestResult("ITI-68: Retrieve Binary", TestStatus.PASSED, 34.1),
+        ]
+    
     for r in mock_doc_results:
         print_test_result(r)
         suite.results.append(r)
@@ -1119,13 +1177,27 @@ def run_mock_demo(animated: bool = True):
     if animated:
         wave_animation("Testing resource queries...", 0.6)
     
-    mock_res_results = [
-        TestResult("GET /Condition?patient=...", TestStatus.PASSED, 41.2, "2 result(s)"),
-        TestResult("GET /Observation?patient=...", TestStatus.PASSED, 38.7, "3 result(s)"),
-        TestResult("GET /AllergyIntolerance?patient=...", TestStatus.PASSED, 29.4, "1 result(s)"),
-        TestResult("GET /MedicationStatement?patient=...", TestStatus.SKIPPED, 25.1, "0 result(s)"),
-        TestResult("GET /Encounter?patient=...", TestStatus.PASSED, 33.8, "1 result(s)"),
-    ]
+    if scenario == "failure":
+        mock_res_results = [
+            TestResult("Resource Access Tests", TestStatus.SKIPPED, message="No patient ID available"),
+        ]
+    elif scenario == "mixed":
+        mock_res_results = [
+            TestResult("GET /Condition?patient=...", TestStatus.PASSED, 41.2, "2 result(s)"),
+            TestResult("GET /Observation?patient=...", TestStatus.FAILED, 138.7, "Timeout"),
+            TestResult("GET /AllergyIntolerance?patient=...", TestStatus.PASSED, 29.4, "1 result(s)"),
+            TestResult("GET /MedicationStatement?patient=...", TestStatus.SKIPPED, 25.1, "0 result(s)"),
+            TestResult("GET /Encounter?patient=...", TestStatus.FAILED, 233.8, "Status: 503"),
+        ]
+    else:
+        mock_res_results = [
+            TestResult("GET /Condition?patient=...", TestStatus.PASSED, 41.2, "2 result(s)"),
+            TestResult("GET /Observation?patient=...", TestStatus.PASSED, 38.7, "3 result(s)"),
+            TestResult("GET /AllergyIntolerance?patient=...", TestStatus.PASSED, 29.4, "1 result(s)"),
+            TestResult("GET /MedicationStatement?patient=...", TestStatus.SKIPPED, 25.1, "0 result(s)"),
+            TestResult("GET /Encounter?patient=...", TestStatus.PASSED, 33.8, "1 result(s)"),
+        ]
+    
     for r in mock_res_results:
         print_test_result(r)
         suite.results.append(r)
@@ -1178,8 +1250,11 @@ Examples:
     )
     parser.add_argument(
         "--mock", "-m",
-        action="store_true",
-        help="Run with mock data for visual testing"
+        nargs="?",
+        const="success",
+        default=None,
+        choices=["success", "failure", "mixed"],
+        help="Run with mock data for visual testing (scenarios: success, failure, mixed)"
     )
     parser.add_argument(
         "--interactive", "-i",
@@ -1190,8 +1265,8 @@ Examples:
     args = parser.parse_args()
     
     try:
-        if args.mock:
-            return run_mock_demo(not args.no_animation)
+        if args.mock is not None:
+            return run_mock_demo(not args.no_animation, scenario=args.mock)
         elif args.interactive:
             while True:
                 choice = interactive_menu()
