@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EU Health Data API Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        h1 {
+            margin-bottom: 10px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab:hover {
+            background: #f0f0f0;
+        }
+        .tab.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .flow-section {
+            margin-bottom: 30px;
+        }
+        .flow-section h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        .mermaid {
+            background: white;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .request-response {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .panel {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .panel h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.success {
+            background: #27ae60;
+            color: white;
+        }
+        .status.error {
+            background: #e74c3c;
+            color: white;
+        }
+        .status.pending {
+            background: #f39c12;
+            color: white;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px;
+            margin: 5px 0;
+            background: #ecf0f1;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+        .checklist li:before {
+            content: "☐";
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        .checklist li.checked:before {
+            content: "✓";
+            color: #27ae60;
+        }
+        input, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px;
+            width: 200px;
+        }
+        .curl-box {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>EU Health Data API Sandbox Demo</h1>
+            <p>Interactive demonstration of EU Health Data API flows (5-actor model)</p>
+        </header>
+
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('inspect')">Capability Discovery</div>
+            <div class="tab" onclick="showTab('find-patient')">Patient Match (PDQm/PIXm)</div>
+            <div class="tab" onclick="showTab('documents')">Document Consumer (MHD ITI-67/68)</div>
+            <div class="tab" onclick="showTab('document-producer')">Document Producer (MHD ITI-65)</div>
+            <div class="tab" onclick="showTab('resources')">Resource Access (QEDm)</div>
+        </div>
+
+        <!-- Capability Discovery -->
+        <div id="inspect" class="tab-content active">
+            <div class="flow-section">
+                <h2>Capability Discovery</h2>
+                <p>Discover provider capabilities via FHIR CapabilityStatement. The provider declares supported priority areas via <code>instantiates</code> and advertises Document Access Provider and/or Resource Access Provider capabilities.</p>
+                
+                <div class="mermaid" id="inspect-diagram">
+                    sequenceDiagram
+                        participant C as Consumer
+                        participant P as Provider
+                        C->>P: GET /metadata
+                        P-->>C: CapabilityStatement
+                        Note over C: Inspects instantiates<br/>for priority areas<br/>(EPS, MPD, Lab, etc.)
+                </div>
+
+                <button onclick="executeInspect()">Execute Capability Discovery</button>
+                <span id="inspect-status"></span>
+
+                <div class="request-response" id="inspect-result" style="display: none;">
+                    <div class="panel">
+                        <h3>Request</h3>
+                        <div class="curl-box" id="inspect-curl"></div>
+                    </div>
+                    <div class="panel">
+                        <h3>Response</h3>
+                        <pre id="inspect-response"></pre>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Conformance Checklist</h3>
+                    <ul class="checklist" id="inspect-checklist">
+                        <li>GET /metadata returns CapabilityStatement</li>
+                        <li>instantiates references priority area capability statements</li>
+                        <li>Declares Document Access Provider (MHD ITI-67, ITI-68)</li>
+                        <li>Declares Resource Access Provider (QEDm PCC-44)</li>
+                        <li>Lists supported identifier systems (PDQm/PIXm)</li>
+                        <li>FHIR version 4.0.1</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient Match -->
+        <div id="find-patient" class="tab-content">
+            <div class="flow-section">
+                <h2>Patient Match (PDQm/PIXm)</h2>
+                <p>Patient identification using IHE PDQm/PIXm. Identifier-based search is required. Demographics query (ITI-78) and $match operation (ITI-119) are optional.</p>
+                
+                <div class="mermaid" id="find-patient-diagram">
+                    sequenceDiagram
+                        participant C as Consumer
+                        participant P as Provider
+                        C->>P: GET /Patient?identifier=system|value
+                        P-->>C: Bundle (Patient resources)
+                        Note over C: Uses Patient.id<br/>for subsequent queries
+                </div>
+
+                <div>
+                    <h3>Basic Patient Demographics Query (Required)</h3>
+                    <input type="text" id="patient-identifier" placeholder="Identifier value" value="123456789">
+                    <select id="patient-system">
+                        <option value="urn:oid:2.16.840.1.113883.2.4.6.3">urn:oid:2.16.840.1.113883.2.4.6.3</option>
+                        <option value="https://national.example/id">https://national.example/id</option>
+                    </select>
+                    <button onclick="executeFindPatient()">Execute Patient Match</button>
+                    <span id="find-patient-status"></span>
+                </div>
+
+                <div class="request-response" id="find-patient-result" style="display: none;">
+                    <div class="panel">
+                        <h3>Request</h3>
+                        <div class="curl-box" id="find-patient-curl"></div>
+                    </div>
+                    <div class="panel">
+                        <h3>Response</h3>
+                        <pre id="find-patient-response"></pre>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Conformance Checklist</h3>
+                    <ul class="checklist" id="find-patient-checklist">
+                        <li>Basic identifier search (required)</li>
+                        <li>Returns Bundle with Patient resources</li>
+                        <li>Uses supported identifier systems from CapabilityStatement</li>
+                        <li>Optional: Demographics query (ITI-78)</li>
+                        <li>Optional: $match operation (ITI-119)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Consumer -->
+        <div id="documents" class="tab-content">
+            <div class="flow-section">
+                <h2>Document Consumer (MHD ITI-67, ITI-68)</h2>
+                <p>Document Consumer queries and retrieves documents from Document Access Provider. ITI-67: Find Document References. ITI-68: Retrieve Document.</p>
+                
+                <div class="mermaid" id="documents-diagram">
+                    sequenceDiagram
+                        participant C as Document Consumer
+                        participant P as Document Access Provider
+                        C->>P: GET /DocumentReference?patient=... (ITI-67)
+                        P-->>C: Bundle (DocumentReferences)
+                        C->>P: GET /Binary/{id} (ITI-68)
+                        P-->>C: Document payload
+                </div>
+
+                <div>
+                    <input type="text" id="doc-patient-id" placeholder="Patient ID" value="">
+                    <button onclick="executeListDocuments()">List Documents</button>
+                    <span id="documents-status"></span>
+                </div>
+
+                <div class="request-response" id="documents-result" style="display: none;">
+                    <div class="panel">
+                        <h3>Request</h3>
+                        <div class="curl-box" id="documents-curl"></div>
+                    </div>
+                    <div class="panel">
+                        <h3>Response</h3>
+                        <pre id="documents-response"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Producer -->
+        <div id="document-producer" class="tab-content">
+            <div class="flow-section">
+                <h2>Document Producer (MHD ITI-65)</h2>
+                <p>Document Producer publishes documents to Document Access Provider. ITI-65: Provide Document Bundle.</p>
+                
+                <div class="mermaid" id="document-producer-diagram">
+                    sequenceDiagram
+                        participant P as Document Producer
+                        participant A as Document Access Provider
+                        P->>A: POST / (Bundle with DocumentReference + Binary) (ITI-65)
+                        A-->>P: Bundle (created resources)
+                        Note over A: Document now available<br/>for Document Consumers
+                </div>
+
+                <div>
+                    <h3>Publish Document</h3>
+                    <p>Publish a new document by uploading a FHIR Bundle containing DocumentReference and Binary resources.</p>
+                    <input type="file" id="publish-file" accept=".json" onchange="loadPublishBundle()">
+                    <button onclick="executePublishDocument()">Publish Document (ITI-65)</button>
+                    <span id="publish-status"></span>
+                </div>
+
+                <div class="request-response" id="publish-result" style="display: none;">
+                    <div class="panel">
+                        <h3>Request</h3>
+                        <div class="curl-box" id="publish-curl"></div>
+                        <h4>Bundle Preview</h4>
+                        <pre id="publish-bundle-preview"></pre>
+                    </div>
+                    <div class="panel">
+                        <h3>Response</h3>
+                        <pre id="publish-response"></pre>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Example Bundle Structure</h3>
+                    <pre id="example-bundle-structure">{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "DocumentReference"
+      },
+      "resource": {
+        "resourceType": "DocumentReference",
+        "status": "current",
+        "type": {
+          "coding": [{
+            "system": "http://loinc.org",
+            "code": "60591-5",
+            "display": "Patient summary Document"
+          }]
+        },
+        "subject": {
+          "reference": "Patient/{patient-id}"
+        },
+        "content": [{
+          "attachment": {
+            "contentType": "application/fhir+json",
+            "url": "Binary/{binary-id}"
+          }
+        }]
+      }
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "Binary"
+      },
+      "resource": {
+        "resourceType": "Binary",
+        "contentType": "application/fhir+json",
+        "data": "base64encodeddata"
+      }
+    }
+  ]
+}</pre>
+                </div>
+
+                <div class="panel">
+                    <h3>Conformance Checklist</h3>
+                    <ul class="checklist" id="publish-checklist">
+                        <li>ITI-65 uses POST / with Bundle</li>
+                        <li>Bundle contains DocumentReference</li>
+                        <li>Bundle contains Binary</li>
+                        <li>DocumentReference references Binary</li>
+                        <li>Published document appears in ITI-67 queries</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resources -->
+        <div id="resources" class="tab-content">
+            <div class="flow-section">
+                <h2>Resource Access (QEDm)</h2>
+                <p>FHIR resource query using IHE QEDm PCC-44. All queries must be patient-scoped. Read/search only (no create/update/delete).</p>
+                
+                <div class="mermaid" id="resources-diagram">
+                    sequenceDiagram
+                        participant C as Resource Consumer
+                        participant P as Resource Access Provider
+                        C->>P: GET /Condition?patient=... (PCC-44)
+                        C->>P: GET /Observation?patient=... (PCC-44)
+                        C->>P: GET /AllergyIntolerance?patient=... (PCC-44)
+                        P-->>C: Bundles (Resources)
+                </div>
+
+                <div>
+                    <input type="text" id="resource-patient-id" placeholder="Patient ID" value="">
+                    <button onclick="executeQueryResources()">Query Resources</button>
+                    <span id="resources-status"></span>
+                </div>
+
+                <div class="request-response" id="resources-result" style="display: none;">
+                    <div class="panel">
+                        <h3>Request</h3>
+                        <div class="curl-box" id="resources-curl"></div>
+                    </div>
+                    <div class="panel">
+                        <h3>Response</h3>
+                        <pre id="resources-response"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

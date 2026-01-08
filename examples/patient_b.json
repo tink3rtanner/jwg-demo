@@ -1,0 +1,33 @@
+{
+  "resourceType": "Patient",
+  "id": "patient-b",
+  "meta": {
+    "profile": ["http://hl7.org/fhir/StructureDefinition/Patient"]
+  },
+  "identifier": [
+    {
+      "system": "urn:oid:2.16.840.1.113883.2.4.6.3",
+      "value": "987654321"
+    },
+    {
+      "system": "https://national.example/id",
+      "value": "PAT-B-002"
+    }
+  ],
+  "name": [
+    {
+      "family": "Johnson",
+      "given": ["Sarah", "Elizabeth"]
+    }
+  ],
+  "gender": "female",
+  "birthDate": "1990-07-22",
+  "address": [
+    {
+      "line": ["456 Oak Avenue"],
+      "city": "Rotterdam",
+      "postalCode": "3011 AA",
+      "country": "NL"
+    }
+  ]
+}

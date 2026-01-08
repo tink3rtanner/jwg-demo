@@ -1,0 +1,6 @@
+{
+  "resourceType": "Binary",
+  "id": "eps-doc-a",
+  "contentType": "application/fhir+json",
+  "data": "base64encodeddata"
+}

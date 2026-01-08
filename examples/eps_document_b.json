@@ -1,0 +1,59 @@
+{
+  "resourceType": "Bundle",
+  "id": "eps-doc-b",
+  "type": "document",
+  "meta": {
+    "profile": ["http://hl7.org/fhir/StructureDefinition/Bundle"]
+  },
+  "timestamp": "2024-01-20T14:30:00Z",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:patient-b",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "patient-b",
+        "identifier": [
+          {
+            "system": "urn:oid:2.16.840.1.113883.2.4.6.3",
+            "value": "987654321"
+          }
+        ],
+        "name": [
+          {
+            "family": "Johnson",
+            "given": ["Sarah", "Elizabeth"]
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1990-07-22"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:allergy-1",
+      "resource": {
+        "resourceType": "AllergyIntolerance",
+        "id": "allergy-b-1",
+        "patient": {
+          "reference": "Patient/patient-b"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "762952008",
+              "display": "Allergy to penicillin"
+            }
+          ]
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
+              "code": "active"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

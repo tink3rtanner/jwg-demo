@@ -1,0 +1,13 @@
+{
+  "resourceType": "Organization",
+  "id": "org-demo",
+  "name": "Demo Healthcare Organization",
+  "address": [
+    {
+      "line": ["789 Healthcare Blvd"],
+      "city": "Utrecht",
+      "postalCode": "3511 AB",
+      "country": "NL"
+    }
+  ]
+}
