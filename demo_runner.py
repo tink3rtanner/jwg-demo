@@ -220,13 +220,19 @@ def test_patient_match():
         print_test("Patient match", "fail", str(e))
         return None
 
-def test_document_consumer(patient_id: str):
-    """Test document consumer (ITI-67, ITI-68)"""
+def test_document_consumer(patient_id: str) -> str:
+    """Test document consumer (ITI-67, ITI-68)
+
+    Returns:
+        "pass" if all executed checks passed
+        "fail" if any executed check failed
+        "skip" if prerequisites are missing or required data isn't available
+    """
     print_section("3. Document Consumer (MHD ITI-67, ITI-68)", Colors.ORANGE)
     
     if not patient_id:
         print_test("Document query", "skip", "No patient ID")
-        return
+        return "skip"
     
     bounce_animation("Querying DocumentReferences...", 0.8)
     try:
@@ -258,10 +264,14 @@ def test_document_consumer(patient_id: str):
                             bin_response = httpx.get(f"{FHIR_BASE}/fhir/Binary/{binary_id}", timeout=5)
                             if bin_response.status_code == 200:
                                 print_test("ITI-68: GET /Binary/{id}", "pass", f"Status: {bin_response.status_code}")
+                                overall = "pass"
                             else:
                                 print_test("ITI-68: GET /Binary/{id}", "fail", f"Status: {bin_response.status_code}")
+                                overall = "fail"
                         except:
                             print_test("ITI-68: GET /Binary/{id}", "skip", "Binary not accessible")
+                            overall = "skip"
+                        return overall
                 
                 print(f"\n{Colors.CYAN}DocumentReference Preview:{Colors.RESET}")
                 print_json({
@@ -270,23 +280,37 @@ def test_document_consumer(patient_id: str):
                     "type": doc_ref.get("type", {}).get("coding", [{}])[0] if doc_ref.get("type") else {},
                     "subject": doc_ref.get("subject", {})
                 })
+                # ITI-67 succeeded and we found at least one DocumentReference. If we couldn't
+                # attempt ITI-68 (no Binary URL / attachment), treat as pass for the section.
+                return "pass"
             else:
                 print_test("DocumentReference found", "skip", "No documents for patient")
+                # ITI-67 succeeded, but there are no docs to validate ITI-68 against.
+                return "skip"
         else:
             print_test("ITI-67: GET /DocumentReference", "fail", f"Status: {response.status_code}")
+            return "fail"
     except Exception as e:
         print_test("Document query", "fail", str(e))
+        return "fail"
 
-def test_resource_access(patient_id: str):
-    """Test resource access (QEDm PCC-44)"""
+def test_resource_access(patient_id: str) -> str:
+    """Test resource access (QEDm PCC-44)
+
+    Returns:
+        "pass" if all executed queries succeeded (HTTP 200)
+        "fail" if any query failed (non-200/exception)
+        "skip" if prerequisites are missing
+    """
     print_section("4. Resource Access (QEDm PCC-44)", Colors.GREEN)
     
     if not patient_id:
         print_test("Resource queries", "skip", "No patient ID")
-        return
+        return "skip"
     
     resource_types = ["Condition", "Observation", "AllergyIntolerance", "MedicationStatement", "Encounter"]
     results = {}
+    had_failure = False
     
     for res_type in resource_types:
         bounce_animation(f"Querying {res_type}...", 0.3)
@@ -304,13 +328,17 @@ def test_resource_access(patient_id: str):
                 results[res_type] = count
             else:
                 print_test(f"GET /{res_type}?patient=...", "fail", f"Status: {response.status_code}")
+                had_failure = True
         except Exception as e:
             print_test(f"GET /{res_type}?patient=...", "fail", str(e))
+            had_failure = True
     
     print(f"\n{Colors.CYAN}Resource Query Summary:{Colors.RESET}")
     for res_type, count in results.items():
         icon = f"{Colors.GREEN}✓{Colors.RESET}" if count > 0 else f"{Colors.GRAY}○{Colors.RESET}"
         print(f"  {icon} {res_type}: {count}")
+    
+    return "fail" if had_failure else "pass"
 
 def test_document_producer():
     """Test document producer (ITI-65)"""
@@ -373,11 +401,21 @@ def main():
     else:
         failed += 1
     
-    test_document_consumer(patient_id)
-    passed += 1  # Count as passed if it runs
+    doc_consumer_status = test_document_consumer(patient_id)
+    if doc_consumer_status == "pass":
+        passed += 1
+    elif doc_consumer_status == "fail":
+        failed += 1
+    else:
+        skipped += 1
     
-    test_resource_access(patient_id)
-    passed += 1  # Count as passed if it runs
+    resource_access_status = test_resource_access(patient_id)
+    if resource_access_status == "pass":
+        passed += 1
+    elif resource_access_status == "fail":
+        failed += 1
+    else:
+        skipped += 1
     
     test_document_producer()
     skipped += 1  # Documented as skip
