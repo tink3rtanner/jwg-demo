@@ -1,21 +1,31 @@
+# EU Health Data API Configuration
+# Aligned with https://build.fhir.org/ig/euridice-org/jwg-api/en/
+
+# Priority areas from EHDS ANNEX II
 supported_priority_areas:
-  - eps
+  - EPS  # European Patient Summary
 
+# Provider actor capabilities
 interfaces:
-  document: true
-  resource: true
+  document: true   # Document Access Provider (MHD ITI-67, ITI-68, ITI-65)
+  resource: true   # Resource Access Provider (QEDm PCC-44)
 
+# Patient identity matching (PDQm/PIXm)
 supported_identifier_systems:
   Patient:
-    - "urn:oid:2.16.840.1.113883.2.4.6.3"
-    - "https://national.example/id"
+    - "urn:oid:2.16.840.1.113883.2.4.6.3"  # Example national identifier system
+    - "https://national.example/id"        # Example identifier system
 
+# Authorization (SMART Backend Services + IHE IUA)
+# Note: Authorization is required per IG, but for demo we allow no-auth mode
 auth:
-  enabled: false
+  enabled: false  # Set to true to enable SMART Backend Services
   issuer: ""
   audience: ""
+  token_endpoint: ""
 
-export:
-  mode: "ui"
-
+# FHIR version
 fhir_version: "4.0.1"
+
+# Base URL for capability statement
+base_url: "https://fhir.local"

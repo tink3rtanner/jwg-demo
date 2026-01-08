@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JWG API Demo</title>
+    <title>EU Health Data API Demo</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
         * {
@@ -179,23 +179,22 @@
 <body>
     <div class="container">
         <header>
-            <h1>JWG API Sandbox Demo</h1>
-            <p>Interactive demonstration of JWG API flows</p>
+            <h1>EU Health Data API Sandbox Demo</h1>
+            <p>Interactive demonstration of EU Health Data API flows (5-actor model)</p>
         </header>
 
         <div class="tabs">
-            <div class="tab active" onclick="showTab('inspect')">T1: Inspect</div>
-            <div class="tab" onclick="showTab('find-patient')">T2: Find Patient</div>
-            <div class="tab" onclick="showTab('documents')">EPS: Documents</div>
-            <div class="tab" onclick="showTab('resources')">EPS: Resources</div>
-            <div class="tab" onclick="showTab('admin')">Admin</div>
+            <div class="tab active" onclick="showTab('inspect')">Capability Discovery</div>
+            <div class="tab" onclick="showTab('find-patient')">Patient Match (PDQm/PIXm)</div>
+            <div class="tab" onclick="showTab('documents')">Document Exchange (MHD)</div>
+            <div class="tab" onclick="showTab('resources')">Resource Access (QEDm)</div>
         </div>
 
-        <!-- T1: Inspect -->
+        <!-- Capability Discovery -->
         <div id="inspect" class="tab-content active">
             <div class="flow-section">
-                <h2>T1: Inspect Provider Capabilities</h2>
-                <p>Fetch the provider's capability statement to understand supported interfaces and priority areas.</p>
+                <h2>Capability Discovery</h2>
+                <p>Discover provider capabilities via FHIR CapabilityStatement. The provider declares supported priority areas via <code>instantiates</code> and advertises Document Access Provider and/or Resource Access Provider capabilities.</p>
                 
                 <div class="mermaid" id="inspect-diagram">
                     sequenceDiagram
@@ -203,9 +202,10 @@
                         participant P as Provider
                         C->>P: GET /metadata
                         P-->>C: CapabilityStatement
+                        Note over C: Inspects instantiates<br/>for priority areas<br/>(EPS, MPD, Lab, etc.)
                 </div>
 
-                <button onclick="executeInspect()">Execute T1: Inspect</button>
+                <button onclick="executeInspect()">Execute Capability Discovery</button>
                 <span id="inspect-status"></span>
 
                 <div class="request-response" id="inspect-result" style="display: none;">
@@ -222,38 +222,40 @@
                 <div class="panel">
                     <h3>Conformance Checklist</h3>
                     <ul class="checklist" id="inspect-checklist">
-                        <li>T1 uses GET /metadata</li>
-                        <li>Returns CapabilityStatement</li>
-                        <li>Declares document access support</li>
-                        <li>Declares resource access support</li>
-                        <li>Lists supported priority areas (EPS)</li>
-                        <li>Includes supported identifier systems</li>
+                        <li>GET /metadata returns CapabilityStatement</li>
+                        <li>instantiates references priority area capability statements</li>
+                        <li>Declares Document Access Provider (MHD ITI-67, ITI-68)</li>
+                        <li>Declares Resource Access Provider (QEDm PCC-44)</li>
+                        <li>Lists supported identifier systems (PDQm/PIXm)</li>
+                        <li>FHIR version 4.0.1</li>
                     </ul>
                 </div>
             </div>
         </div>
 
-        <!-- T2: Find Patient -->
+        <!-- Patient Match -->
         <div id="find-patient" class="tab-content">
             <div class="flow-section">
-                <h2>T2: Find Patient</h2>
-                <p>Search for a patient using identifier systems.</p>
+                <h2>Patient Match (PDQm/PIXm)</h2>
+                <p>Patient identification using IHE PDQm/PIXm. Identifier-based search is required. Demographics query (ITI-78) and $match operation (ITI-119) are optional.</p>
                 
                 <div class="mermaid" id="find-patient-diagram">
                     sequenceDiagram
                         participant C as Consumer
                         participant P as Provider
-                        C->>P: GET /Patient?identifier=...
+                        C->>P: GET /Patient?identifier=system|value
                         P-->>C: Bundle (Patient resources)
+                        Note over C: Uses Patient.id<br/>for subsequent queries
                 </div>
 
                 <div>
+                    <h3>Basic Patient Demographics Query (Required)</h3>
                     <input type="text" id="patient-identifier" placeholder="Identifier value" value="123456789">
                     <select id="patient-system">
                         <option value="urn:oid:2.16.840.1.113883.2.4.6.3">urn:oid:2.16.840.1.113883.2.4.6.3</option>
                         <option value="https://national.example/id">https://national.example/id</option>
                     </select>
-                    <button onclick="executeFindPatient()">Execute T2: Find Patient</button>
+                    <button onclick="executeFindPatient()">Execute Patient Match</button>
                     <span id="find-patient-status"></span>
                 </div>
 
@@ -271,9 +273,11 @@
                 <div class="panel">
                     <h3>Conformance Checklist</h3>
                     <ul class="checklist" id="find-patient-checklist">
-                        <li>T2 uses GET /Patient?identifier=...</li>
+                        <li>Basic identifier search (required)</li>
                         <li>Returns Bundle with Patient resources</li>
-                        <li>Supports identifier search</li>
+                        <li>Uses supported identifier systems from CapabilityStatement</li>
+                        <li>Optional: Demographics query (ITI-78)</li>
+                        <li>Optional: $match operation (ITI-119)</li>
                     </ul>
                 </div>
             </div>
@@ -282,16 +286,16 @@
         <!-- Documents -->
         <div id="documents" class="tab-content">
             <div class="flow-section">
-                <h2>EPS Patient Summary via Documents (MHD Path)</h2>
-                <p>Query DocumentReferences and retrieve document payloads.</p>
+                <h2>Document Exchange (MHD)</h2>
+                <p>Document exchange using IHE MHD transactions. ITI-67: Find Document References. ITI-68: Retrieve Document.</p>
                 
                 <div class="mermaid" id="documents-diagram">
                     sequenceDiagram
-                        participant C as Consumer
-                        participant P as Provider
-                        C->>P: GET /DocumentReference?patient=...
+                        participant C as Document Consumer
+                        participant P as Document Access Provider
+                        C->>P: GET /DocumentReference?patient=... (ITI-67)
                         P-->>C: Bundle (DocumentReferences)
-                        C->>P: GET /Binary/{id}
+                        C->>P: GET /Binary/{id} (ITI-68)
                         P-->>C: Document payload
                 </div>
 
@@ -317,16 +321,16 @@
         <!-- Resources -->
         <div id="resources" class="tab-content">
             <div class="flow-section">
-                <h2>EPS Patient Summary via Resources (QEDM Path)</h2>
-                <p>Query discrete FHIR resources for a patient.</p>
+                <h2>Resource Access (QEDm)</h2>
+                <p>FHIR resource query using IHE QEDm PCC-44. All queries must be patient-scoped. Read/search only (no create/update/delete).</p>
                 
                 <div class="mermaid" id="resources-diagram">
                     sequenceDiagram
-                        participant C as Consumer
-                        participant P as Provider
-                        C->>P: GET /Condition?patient=...
-                        C->>P: GET /Observation?patient=...
-                        C->>P: GET /AllergyIntolerance?patient=...
+                        participant C as Resource Consumer
+                        participant P as Resource Access Provider
+                        C->>P: GET /Condition?patient=... (PCC-44)
+                        C->>P: GET /Observation?patient=... (PCC-44)
+                        C->>P: GET /AllergyIntolerance?patient=... (PCC-44)
                         P-->>C: Bundles (Resources)
                 </div>
 
@@ -349,31 +353,6 @@
             </div>
         </div>
 
-        <!-- Admin -->
-        <div id="admin" class="tab-content">
-            <div class="flow-section">
-                <h2>Admin: Import/Export</h2>
-                
-                <h3>T4: Import</h3>
-                <div>
-                    <input type="file" id="import-file" accept=".json,.zip">
-                    <button onclick="executeImport()">Import</button>
-                    <span id="import-status"></span>
-                </div>
-
-                <h3>T5: Export</h3>
-                <div>
-                    <input type="text" id="export-patient-id" placeholder="Patient ID" value="">
-                    <select id="export-mode">
-                        <option value="both">Both</option>
-                        <option value="documents">Documents</option>
-                        <option value="resources">Resources</option>
-                    </select>
-                    <button onclick="executeExport()">Export</button>
-                    <span id="export-status"></span>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script src="app.js"></script>

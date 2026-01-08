@@ -38,15 +38,28 @@ async function executeInspect() {
         // Update checklist
         const checklist = document.getElementById('inspect-checklist');
         const items = checklist.querySelectorAll('li');
-        items.forEach(item => {
-            if (data.resourceType === 'CapabilityStatement') item.classList.add('checked');
+        if (data.resourceType === 'CapabilityStatement') {
+            items[0].classList.add('checked');
+            if (data.instantiates && data.instantiates.length > 0) {
+                items[1].classList.add('checked');
+            }
             if (data.rest && data.rest[0]) {
                 const hasDoc = data.rest[0].resource?.some(r => r.type === 'DocumentReference');
                 const hasResources = data.rest[0].resource?.some(r => ['Condition', 'Observation'].includes(r.type));
                 if (hasDoc) items[2].classList.add('checked');
                 if (hasResources) items[3].classList.add('checked');
+                
+                // Check for Patient with identifier systems
+                const patientRes = data.rest[0].resource?.find(r => r.type === 'Patient');
+                if (patientRes && patientRes.extension) {
+                    items[4].classList.add('checked');
+                }
+                
+                if (data.fhirVersion === '4.0.1') {
+                    items[5].classList.add('checked');
+                }
             }
-        });
+        }
     } catch (error) {
         setStatus('inspect-status', 'error', `✗ ${error.message}`);
     }
@@ -80,7 +93,9 @@ async function executeFindPatient() {
         // Update checklist
         const checklist = document.getElementById('find-patient-checklist');
         if (data.resourceType === 'Bundle') {
-            checklist.querySelectorAll('li').forEach(item => item.classList.add('checked'));
+            checklist.querySelectorAll('li').forEach((item, idx) => {
+                if (idx < 3) item.classList.add('checked'); // First 3 are required/implemented
+            });
         }
     } catch (error) {
         setStatus('find-patient-status', 'error', `✗ ${error.message}`);
@@ -144,72 +159,6 @@ async function executeQueryResources() {
     }
 }
 
-async function executeImport() {
-    const fileInput = document.getElementById('import-file');
-    if (!fileInput.files[0]) {
-        alert('Please select a file');
-        return;
-    }
-    
-    setStatus('import-status', 'pending', 'Uploading...');
-    
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
-    
-    try {
-        const response = await fetch(`${API_BASE}/admin/import`, {
-            method: 'POST',
-            body: formData
-        });
-        const data = await response.json();
-        
-        if (response.ok) {
-            setStatus('import-status', 'success', `✓ ${data.message || 'Imported'}`);
-        } else {
-            setStatus('import-status', 'error', `✗ ${data.detail || 'Import failed'}`);
-        }
-    } catch (error) {
-        setStatus('import-status', 'error', `✗ ${error.message}`);
-    }
-}
-
-async function executeExport() {
-    const patientId = document.getElementById('export-patient-id').value;
-    const mode = document.getElementById('export-mode').value;
-    
-    if (!patientId) {
-        alert('Please enter a Patient ID');
-        return;
-    }
-    
-    setStatus('export-status', 'pending', 'Exporting...');
-    
-    const formData = new FormData();
-    formData.append('patient_id', patientId);
-    formData.append('mode', mode);
-    
-    try {
-        const response = await fetch(`${API_BASE}/admin/export`, {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `export_patient_${patientId}.zip`;
-            a.click();
-            setStatus('export-status', 'success', '✓ Downloaded');
-        } else {
-            const data = await response.json();
-            setStatus('export-status', 'error', `✗ ${data.detail || 'Export failed'}`);
-        }
-    } catch (error) {
-        setStatus('export-status', 'error', `✗ ${error.message}`);
-    }
-}
 
 // Initialize mermaid on load
 window.addEventListener('load', () => {
