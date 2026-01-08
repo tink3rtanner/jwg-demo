@@ -339,39 +339,38 @@ CLAUDE_LOGO = r"""
 
 def print_claude_header():
     """Print Claude Code style header"""
-    width, _ = get_terminal_size()
-    width = min(width, 80)
+    width = 78
     
     print()
-    # Gradient-style ASCII art
-    lines = [
-        f"{Style.ORANGE}╔{'═' * (width-2)}╗{Style.RESET}",
-        f"{Style.ORANGE}║{Style.RESET}                                                                            {Style.ORANGE}║{Style.RESET}",
-    ]
+    print(f"{Style.ORANGE}╔{'═' * (width-2)}╗{Style.RESET}")
+    print(f"{Style.ORANGE}║{Style.RESET}{' ' * (width-2)}{Style.ORANGE}║{Style.RESET}")
     
-    # Logo
+    # Logo - cleaner minimal version
     logo_lines = [
-        "   ┌─────────────────────────────────────────────────────────────────┐",
-        "   │  ███████╗██╗   ██╗    ██╗  ██╗███████╗ █████╗ ██╗  ████████╗██╗ │",
-        "   │  ██╔════╝██║   ██║    ██║  ██║██╔════╝██╔══██╗██║  ╚══██╔══╝██║ │",
-        "   │  █████╗  ██║   ██║    ███████║█████╗  ███████║██║     ██║   ███║│",
-        "   │  ██╔══╝  ██║   ██║    ██╔══██║██╔══╝  ██╔══██║██║     ██║   ██║ │",
-        "   │  ███████╗╚██████╔╝    ██║  ██║███████╗██║  ██║███████╗██║   ██║ │",
-        "   │  ╚══════╝ ╚═════╝     ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝╚═╝   ╚═╝ │",
-        "   └─────────────────────────────────────────────────────────────────┘",
+        "┌────────────────────────────────────────────────────────────────────┐",
+        "│  ███████╗██╗   ██╗    ██╗  ██╗███████╗ █████╗ ██╗  ████████╗██╗  │",
+        "│  ██╔════╝██║   ██║    ██║  ██║██╔════╝██╔══██╗██║  ╚══██╔══╝██║  │",
+        "│  █████╗  ██║   ██║    ███████║█████╗  ███████║██║     ██║   ██║  │",
+        "│  ██╔══╝  ██║   ██║    ██╔══██║██╔══╝  ██╔══██║██║     ██║   ██║  │",
+        "│  ███████╗╚██████╔╝    ██║  ██║███████╗██║  ██║███████╗██║   ██║  │",
+        "│  ╚══════╝ ╚═════╝     ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝╚═╝   ╚═╝  │",
+        "└────────────────────────────────────────────────────────────────────┘",
     ]
     
     for line in logo_lines:
-        padded = line.center(width - 2)
-        print(f"{Style.ORANGE}║{Style.PEACH}{padded}{Style.ORANGE}║{Style.RESET}")
+        padding = (width - 2 - len(line)) // 2
+        padded = ' ' * padding + line + ' ' * (width - 2 - padding - len(line))
+        print(f"{Style.ORANGE}║{Style.PEACH}{padded}{Style.RESET}{Style.ORANGE}║{Style.RESET}")
     
     print(f"{Style.ORANGE}║{Style.RESET}{' ' * (width-2)}{Style.ORANGE}║{Style.RESET}")
     
     subtitle = "API Demo Suite • Claude Code Style"
-    print(f"{Style.ORANGE}║{Style.RESET}{Style.BOLD}{Style.WHITE}{subtitle.center(width-2)}{Style.RESET}{Style.ORANGE}║{Style.RESET}")
+    sub_padding = (width - 2 - len(subtitle)) // 2
+    print(f"{Style.ORANGE}║{Style.RESET}{' ' * sub_padding}{Style.BOLD}{Style.WHITE}{subtitle}{Style.RESET}{' ' * (width - 2 - sub_padding - len(subtitle))}{Style.ORANGE}║{Style.RESET}")
     
     info = "MHD • QEDm • PDQm/PIXm • 5-Actor Model"
-    print(f"{Style.ORANGE}║{Style.RESET}{Style.DIM}{Style.GRAY}{info.center(width-2)}{Style.RESET}{Style.ORANGE}║{Style.RESET}")
+    info_padding = (width - 2 - len(info)) // 2
+    print(f"{Style.ORANGE}║{Style.RESET}{' ' * info_padding}{Style.DIM}{Style.GRAY}{info}{Style.RESET}{' ' * (width - 2 - info_padding - len(info))}{Style.ORANGE}║{Style.RESET}")
     
     print(f"{Style.ORANGE}║{Style.RESET}{' ' * (width-2)}{Style.ORANGE}║{Style.RESET}")
     print(f"{Style.ORANGE}╚{'═' * (width-2)}╝{Style.RESET}")
@@ -1048,6 +1047,108 @@ def interactive_menu():
 # Entry Point
 # ═══════════════════════════════════════════════════════════════════════════════
 
+def run_mock_demo(animated: bool = True):
+    """Run demo with mock data for visual testing"""
+    
+    clear_screen()
+    print_claude_header()
+    
+    suite = TestSuite(name="EU Health Data API Tests")
+    
+    print(f"  {Style.GRAY}Running in MOCK mode for visual testing...{Style.RESET}")
+    print()
+    
+    if animated:
+        spinner_animation("Connecting to API", duration=0.5)
+    
+    print(f"  {Style.SUCCESS}{Icons.CHECK}{Style.RESET} Mock API ready")
+    print()
+    
+    # Mock Capability Discovery
+    print_section_header("1. Capability Discovery", "◆", Style.ORANGE)
+    if animated:
+        bounce_animation("Testing CapabilityStatement...", 0.4)
+    
+    mock_cap_results = [
+        TestResult("GET /metadata", TestStatus.PASSED, 45.2, "Status: 200"),
+        TestResult("ResourceType is CapabilityStatement", TestStatus.PASSED),
+        TestResult("FHIR Version is 4.0.1", TestStatus.PASSED),
+        TestResult("Priority areas declared (instantiates)", TestStatus.PASSED, message="2 priority area(s)"),
+        TestResult("DocumentReference resource declared", TestStatus.PASSED),
+        TestResult("Binary resource declared", TestStatus.PASSED),
+        TestResult("Patient resource declared", TestStatus.PASSED),
+        TestResult("Condition resource declared", TestStatus.PASSED),
+    ]
+    for r in mock_cap_results:
+        print_test_result(r)
+        suite.results.append(r)
+    
+    # Mock Patient Match
+    print_section_header("2. Patient Match (PDQm/PIXm)", "◆", Style.PURPLE)
+    if animated:
+        bounce_animation("Testing patient search...", 0.4)
+    
+    mock_patient_results = [
+        TestResult("GET /Patient?identifier=...", TestStatus.PASSED, 62.1, "Status: 200"),
+        TestResult("Returns FHIR Bundle", TestStatus.PASSED),
+        TestResult("Patient found in Bundle", TestStatus.PASSED, message="ID: patient-a"),
+    ]
+    for r in mock_patient_results:
+        print_test_result(r)
+        suite.results.append(r)
+    
+    print(f"\n    {Style.DIM}Using patient: {Style.CYAN}patient-a{Style.RESET}")
+    
+    # Mock Document Exchange
+    print_section_header("3. Document Exchange (MHD)", "◆", Style.CORAL)
+    if animated:
+        bounce_animation("Testing document queries...", 0.4)
+    
+    mock_doc_results = [
+        TestResult("ITI-67: Find DocumentReferences", TestStatus.PASSED, 78.3, "Found 2 document(s)"),
+        TestResult("DocumentReference has status=current", TestStatus.PASSED),
+        TestResult("DocumentReference has Binary URL", TestStatus.PASSED, message="Binary/eps-binary-a"),
+        TestResult("ITI-68: Retrieve Binary", TestStatus.PASSED, 34.1),
+    ]
+    for r in mock_doc_results:
+        print_test_result(r)
+        suite.results.append(r)
+    
+    # Mock Resource Access
+    print_section_header("4. Resource Access (QEDm PCC-44)", "◆", Style.SUCCESS)
+    if animated:
+        wave_animation("Testing resource queries...", 0.6)
+    
+    mock_res_results = [
+        TestResult("GET /Condition?patient=...", TestStatus.PASSED, 41.2, "2 result(s)"),
+        TestResult("GET /Observation?patient=...", TestStatus.PASSED, 38.7, "3 result(s)"),
+        TestResult("GET /AllergyIntolerance?patient=...", TestStatus.PASSED, 29.4, "1 result(s)"),
+        TestResult("GET /MedicationStatement?patient=...", TestStatus.SKIPPED, 25.1, "0 result(s)"),
+        TestResult("GET /Encounter?patient=...", TestStatus.PASSED, 33.8, "1 result(s)"),
+    ]
+    for r in mock_res_results:
+        print_test_result(r)
+        suite.results.append(r)
+    
+    # Summary
+    print()
+    print(f"  {Style.ORANGE}{'═' * 55}{Style.RESET}")
+    print_summary_box(suite)
+    
+    if suite.failed == 0 and animated:
+        print_celebration()
+    
+    # Footer
+    print(f"  {Style.GRAY}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{Style.RESET}")
+    print(f"  {Style.DIM}Mode:{Style.RESET}    {Style.WARNING}MOCK (visual testing){Style.RESET}")
+    print(f"  {Style.DIM}Demo UI:{Style.RESET} {Style.CYAN}http://localhost:8083{Style.RESET}")
+    print(f"  {Style.DIM}API Base:{Style.RESET} {Style.CYAN}http://localhost:8082{Style.RESET}")
+    print(f"  {Style.GRAY}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{Style.RESET}")
+    print()
+    
+    return 0
+
+
 def main():
     """Main entry point"""
     import argparse
@@ -1058,6 +1159,7 @@ def main():
         epilog="""
 Examples:
   python ascii_demo.py                    Run full test suite
+  python ascii_demo.py --mock             Run with mock data (visual testing)
   python ascii_demo.py --no-animation     Run without animations
   python ascii_demo.py --url http://...   Custom API URL
   python ascii_demo.py --interactive      Interactive menu mode
@@ -1075,6 +1177,11 @@ Examples:
         help="Disable animations"
     )
     parser.add_argument(
+        "--mock", "-m",
+        action="store_true",
+        help="Run with mock data for visual testing"
+    )
+    parser.add_argument(
         "--interactive", "-i",
         action="store_true",
         help="Interactive menu mode"
@@ -1083,7 +1190,9 @@ Examples:
     args = parser.parse_args()
     
     try:
-        if args.interactive:
+        if args.mock:
+            return run_mock_demo(not args.no_animation)
+        elif args.interactive:
             while True:
                 choice = interactive_menu()
                 if choice == "exit":
