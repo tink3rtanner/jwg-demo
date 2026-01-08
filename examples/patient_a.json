@@ -1,0 +1,33 @@
+{
+  "resourceType": "Patient",
+  "id": "patient-a",
+  "meta": {
+    "profile": ["http://hl7.org/fhir/StructureDefinition/Patient"]
+  },
+  "identifier": [
+    {
+      "system": "urn:oid:2.16.840.1.113883.2.4.6.3",
+      "value": "123456789"
+    },
+    {
+      "system": "https://national.example/id",
+      "value": "PAT-A-001"
+    }
+  ],
+  "name": [
+    {
+      "family": "Smith",
+      "given": ["John", "Michael"]
+    }
+  ],
+  "gender": "male",
+  "birthDate": "1985-03-15",
+  "address": [
+    {
+      "line": ["123 Main Street"],
+      "city": "Amsterdam",
+      "postalCode": "1012 AB",
+      "country": "NL"
+    }
+  ]
+}

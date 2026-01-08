@@ -1,0 +1,75 @@
+{
+  "resourceType": "Bundle",
+  "id": "eps-doc-a",
+  "type": "document",
+  "meta": {
+    "profile": ["http://hl7.org/fhir/StructureDefinition/Bundle"]
+  },
+  "timestamp": "2024-01-15T10:00:00Z",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:patient-a",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "patient-a",
+        "identifier": [
+          {
+            "system": "urn:oid:2.16.840.1.113883.2.4.6.3",
+            "value": "123456789"
+          }
+        ],
+        "name": [
+          {
+            "family": "Smith",
+            "given": ["John", "Michael"]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1985-03-15"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:condition-1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "condition-a-1",
+        "subject": {
+          "reference": "Patient/patient-a"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006",
+              "display": "Diabetes mellitus type 2"
+            }
+          ]
+        },
+        "onsetDateTime": "2020-05-10"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:medication-1",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "medication-a-1",
+        "subject": {
+          "reference": "Patient/patient-a"
+        },
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.whocc.no/atc",
+              "code": "A10BA02",
+              "display": "Metformin"
+            }
+          ]
+        },
+        "status": "active",
+        "effectivePeriod": {
+          "start": "2020-05-15"
+        }
+      }
+    }
+  ]
+}

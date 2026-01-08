@@ -1,0 +1,21 @@
+supported_priority_areas:
+  - eps
+
+interfaces:
+  document: true
+  resource: true
+
+supported_identifier_systems:
+  Patient:
+    - "urn:oid:2.16.840.1.113883.2.4.6.3"
+    - "https://national.example/id"
+
+auth:
+  enabled: false
+  issuer: ""
+  audience: ""
+
+export:
+  mode: "ui"
+
+fhir_version: "4.0.1"
