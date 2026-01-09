@@ -13,14 +13,46 @@ pip install -r requirements.txt
 python3 demo_runner.py
 ```
 
+### Mock Mode (No Docker Required)
+
+Test the ASCII UI without running services:
+
+```bash
+# Success scenario - all tests pass
+python3 demo_runner.py --mock
+
+# Failure scenario - connection errors
+python3 demo_runner.py --mock failure
+
+# Mixed scenario - some pass, some fail
+python3 demo_runner.py --mock mixed
+
+# Without animations (faster)
+python3 demo_runner.py --mock --no-animation
+```
+
+### Visual Testing Helper
+
+Use the helper script to iterate on visuals:
+
+```bash
+./visual_test.sh              # Run success scenario
+./visual_test.sh -f           # Failure scenario
+./visual_test.sh -x           # Mixed scenario
+./visual_test.sh -a           # Run all scenarios
+./visual_test.sh -w           # Watch mode (re-run on changes)
+./visual_test.sh -n           # No animations
+```
+
 ## What You'll See
 
 The demo runner shows:
-- ✨ Bouncing animations
-- 🎨 Claude code-style colors
-- 📊 Test results with visual indicators
-- 📋 JSON previews
-- 📈 Summary statistics
+- ✨ Bouncing animations and wave effects
+- 🎨 Claude Code-style colors (orange accent)
+- 📊 Test results with visual indicators (✓ ✗ ⊘)
+- 📋 JSON previews with syntax highlighting
+- 📈 Summary box with progress bar
+- 🎉 Celebration animation when all tests pass
 
 ## Demo UI
 
