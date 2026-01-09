@@ -7,8 +7,9 @@
 cd docker
 docker compose up -d
 
-# Wait ~30 seconds, then run the demo
+# Wait ~30 seconds, then install dependencies and run the demo
 cd ..
+pip install -r requirements.txt
 python3 demo_runner.py
 ```
 
