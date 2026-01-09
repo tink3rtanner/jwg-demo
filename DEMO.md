@@ -1,33 +1,32 @@
 # EU Health Data API Demo - Quick Start
 
-## Run the ASCII Demo
+## Run the Demo
 
 ```bash
 # Make sure services are running
 cd docker
 docker compose up -d
 
-# Wait ~30 seconds, then run the demo
+# Wait ~30 seconds, then run the basic demo
 cd ..
 python3 demo_runner.py
 ```
 
-### Mock Mode (No Docker Required)
+## Claude Code Style ASCII Demo
 
-Test the ASCII UI without running services:
+The enhanced demo lives in `demo/ascii_demo.py`:
 
 ```bash
-# Success scenario - all tests pass
-python3 demo_runner.py --mock
+# Run against live API
+python3 demo/ascii_demo.py
 
-# Failure scenario - connection errors
-python3 demo_runner.py --mock failure
-
-# Mixed scenario - some pass, some fail
-python3 demo_runner.py --mock mixed
+# Mock Mode (No Docker Required) - test the ASCII UI
+python3 demo/ascii_demo.py --mock              # success scenario
+python3 demo/ascii_demo.py --mock failure      # failure scenario
+python3 demo/ascii_demo.py --mock mixed        # mixed results
 
 # Without animations (faster)
-python3 demo_runner.py --mock --no-animation
+python3 demo/ascii_demo.py --mock --no-animation
 ```
 
 ### Visual Testing Helper

@@ -92,24 +92,24 @@ while [[ $# -gt 0 ]]; do
 done
 
 run_demo() {
-    python3 "$SCRIPT_DIR/demo_runner.py" $MODE $ANIM
+    python3 "$SCRIPT_DIR/demo/ascii_demo.py" $MODE $ANIM
 }
 
 run_all_scenarios() {
     echo -e "\n${ORANGE}Running all scenarios...${RESET}\n"
     
     echo -e "${GREEN}━━━ SUCCESS SCENARIO ━━━${RESET}"
-    python3 "$SCRIPT_DIR/demo_runner.py" --mock success $ANIM
+    python3 "$SCRIPT_DIR/demo/ascii_demo.py" --mock success $ANIM
     echo -e "\n${GRAY}Press Enter for next scenario...${RESET}"
     read -r
     
     echo -e "${YELLOW}━━━ MIXED SCENARIO ━━━${RESET}"
-    python3 "$SCRIPT_DIR/demo_runner.py" --mock mixed $ANIM
+    python3 "$SCRIPT_DIR/demo/ascii_demo.py" --mock mixed $ANIM
     echo -e "\n${GRAY}Press Enter for next scenario...${RESET}"
     read -r
     
     echo -e "${RED}━━━ FAILURE SCENARIO ━━━${RESET}"
-    python3 "$SCRIPT_DIR/demo_runner.py" --mock failure $ANIM
+    python3 "$SCRIPT_DIR/demo/ascii_demo.py" --mock failure $ANIM
     
     echo -e "\n${ORANGE}All scenarios complete!${RESET}\n"
 }
@@ -118,7 +118,7 @@ if [ "$ALL_SCENARIOS" = true ]; then
     run_all_scenarios
 elif [ "$WATCH" = true ]; then
     echo -e "${ORANGE}Watch mode${RESET} - Press Ctrl+C to exit"
-    echo -e "${GRAY}Watching demo_runner.py for changes...${RESET}"
+    echo -e "${GRAY}Watching demo/ascii_demo.py for changes...${RESET}"
     echo ""
     
     # Check if inotifywait is available
@@ -127,7 +127,7 @@ elif [ "$WATCH" = true ]; then
             run_demo
             echo ""
             echo -e "${GRAY}Waiting for changes... (Press Ctrl+C to exit)${RESET}"
-            inotifywait -q -e modify "$SCRIPT_DIR/demo_runner.py" 2>/dev/null || sleep 2
+            inotifywait -q -e modify "$SCRIPT_DIR/demo/ascii_demo.py" 2>/dev/null || sleep 2
             clear
         done
     else
