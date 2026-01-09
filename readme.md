@@ -289,18 +289,22 @@ if you want, next step i can turn this into a concrete “repo plan” with:
 
 ⸻
 
-16. ascii demo suite (implemented)
+16. ascii demo suite (implemented, ig-integrated)
 
 a claude-style terminal ui for running test cases with visual bounces and animations:
 	•	location: /demo/ascii_demo.py
+	•	integration: reads from /config/config.yaml (shared with facade)
+	•	ig-aware: uses actual ig transaction definitions and validates against profiles
 	•	features:
 	•	claude-style formatted output (colors, boxes, code blocks)
 	•	cute visual animations (bouncing dots, spinners, success bounces)
-	•	full test suite covering t1-t5 transactions
+	•	full test suite covering t1-t5 transactions from ig config
+	•	ig-aware validators (checks fhir version, profiles, extensions)
 	•	interactive or batch execution modes
 	•	demo mode (shows ui without server connection)
 	•	usage:
 	•	python demo/ascii_demo.py --demo (preview ui)
-	•	python demo/ascii_demo.py (run against server)
+	•	python demo/ascii_demo.py (runs against server, uses /config/config.yaml)
+	•	python demo/ascii_demo.py --config /path/to/config.yaml (custom config)
 	•	python demo/ascii_demo.py --interactive (step through tests)
-	•	integration: can be embedded in /services/demo-ui or run standalone
+	•	integration: fully integrated with repo structure, ready for /services/demo-ui embedding

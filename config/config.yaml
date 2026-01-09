@@ -1,0 +1,111 @@
+# Euridice JWG-API Configuration
+# This config drives both the facade service and the demo test suite
+
+# Provider capabilities
+supported_priority_areas:
+  - eps
+
+interfaces:
+  document: true
+  resource: true
+
+# Supported identifier systems (drives supported-identifier extension in CapabilityStatement)
+supported_identifier_systems:
+  Patient:
+    - "urn:oid:2.16.840.1.113883.2.9.4.3.2"  # Italian fiscal code
+    - "https://national.example/id"
+
+# Authentication configuration
+auth:
+  enabled: false
+  issuer: "https://auth.local"
+  audience: "fhir.local"
+  scopes:
+    - "EHRsys-T1"  # Inspect
+    - "EHRsys-T2"  # Find Patient
+    - "EHRsys-T3"  # Document Access
+    - "EHRsys-T4"  # Resource Query
+    - "EHRsys-T5"  # Admin Export
+
+# Export configuration
+export:
+  mode: "ui"  # or "bulk" for $export
+
+# FHIR server endpoints (for demo/test suite)
+fhir:
+  base_url: "http://localhost:8080"
+  metadata_endpoint: "/metadata"
+  patient_search: "/Patient"
+  document_reference: "/DocumentReference"
+  binary: "/Binary"
+  admin_import: "/admin/import"
+  admin_export: "/admin/export"
+
+# IG-specific test configuration
+ig:
+  version: "1.0.0"
+  fhir_version: "4.0.1"
+  
+  # Transaction definitions from IG
+  transactions:
+    t1:
+      name: "Inspect Provider Capabilities"
+      endpoint: "/metadata"
+      method: "GET"
+      expected_resource: "CapabilityStatement"
+      validations:
+        - check_fhir_version
+        - check_document_access
+        - check_resource_access
+        - check_priority_areas
+        - check_supported_identifiers
+    
+    t2:
+      name: "Find Patient"
+      endpoints:
+        get: "/Patient?identifier={identifier}"
+        post: "/Patient/_search"
+      expected_resource: "Bundle"
+      validations:
+        - check_bundle_structure
+        - check_patient_profile
+    
+    t3:
+      name: "Document Access (MHD)"
+      endpoints:
+        list: "/DocumentReference?patient={patient_id}&status=current"
+        retrieve: "/Binary/{binary_id}"
+      expected_resources:
+        list: "Bundle"
+        retrieve: "Binary"
+      validations:
+        - check_document_reference_profile
+        - check_eps_compliance
+    
+    t4:
+      name: "Resource Query (QEDM)"
+      endpoints:
+        condition: "/Condition?patient={patient_id}"
+        observation: "/Observation?patient={patient_id}"
+        encounter: "/Encounter?patient={patient_id}"
+        allergy: "/AllergyIntolerance?patient={patient_id}"
+        medication: "/MedicationStatement?patient={patient_id}"
+      expected_resource: "Bundle"
+      validations:
+        - check_resource_bundle
+        - check_qedm_compliance
+    
+    t5:
+      name: "Admin Export"
+      endpoint: "/admin/export"
+      method: "POST"
+      validations:
+        - check_export_format
+
+# Demo/test configuration
+demo:
+  test_patients:
+    - identifier: "urn:oid:2.16.840.1.113883.2.9.4.3.2|123456789"
+      name: "Demo Patient A"
+    - identifier: "urn:oid:2.16.840.1.113883.2.9.4.3.2|987654321"
+      name: "Demo Patient B"

@@ -1,15 +1,20 @@
-# ASCII Demo Suite
+# ASCII Demo Suite (IG-Aware)
 
 Claude-style ASCII terminal UI for running test cases against the Euridice JWG-API sandbox.
 
-## Current Status
+## Integration Status
 
-**Standalone**: This demo currently runs independently and makes HTTP requests to any FHIR server. It doesn't depend on other code in this repo yet (since the docker-compose stack and services don't exist yet).
+**IG-Integrated**: This demo reads from `/config/config.yaml` and validates against the actual Implementation Guide structure:
+- Loads transaction definitions from IG config
+- Validates responses against IG profiles and requirements
+- Uses test patients and endpoints from configuration
+- Aligned with the repo's config-driven architecture
 
-**Future Integration**: Once the repo structure is built (docker-compose, services, config), this will integrate as:
-- Part of `/services/demo-ui` (web UI backend)
-- CI/CD smoke tests
-- Docker health check service
+**Repo Integration**:
+- Reads from `/config/config.yaml` (shared with facade service)
+- Uses IG transaction definitions
+- Can be embedded in `/services/demo-ui` or run standalone
+- Ready for docker-compose integration
 
 ## Features
 
@@ -27,10 +32,22 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Run all tests
+### Run all tests (uses /config/config.yaml)
 
 ```bash
 python ascii_demo.py
+```
+
+### Run with custom config
+
+```bash
+python ascii_demo.py --config /path/to/config.yaml
+```
+
+### Override base URL from config
+
+```bash
+python ascii_demo.py --base-url http://localhost:8080
 ```
 
 ### Run interactively (pause between tests)
@@ -39,16 +56,10 @@ python ascii_demo.py
 python ascii_demo.py --interactive
 ```
 
-### Run a specific test
+### Demo mode (preview UI without server)
 
 ```bash
-python ascii_demo.py --test t1-inspect
-```
-
-### Custom base URL
-
-```bash
-python ascii_demo.py --base-url http://localhost:8080
+python ascii_demo.py --demo
 ```
 
 ## Test Cases

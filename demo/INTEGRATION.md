@@ -1,42 +1,58 @@
 # ASCII Demo Integration Guide
 
-## Standalone Usage
+## IG-Aware Configuration
 
-The ASCII demo can run independently:
+The demo is **integrated with the repo structure**:
+- Reads from `/config/config.yaml` (shared with facade service)
+- Uses IG transaction definitions from config
+- Validates against IG profiles and requirements
+- Uses test patients and endpoints from configuration
+
+## Usage
 
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Run in demo mode (no server needed)
-python demo/ascii_demo.py --demo
+# Run with default config (/config/config.yaml)
+python demo/ascii_demo.py
 
-# Run against a server
+# Run with custom config
+python demo/ascii_demo.py --config /path/to/config.yaml
+
+# Override base URL
 python demo/ascii_demo.py --base-url http://localhost:8080
+
+# Demo mode (preview UI)
+python demo/ascii_demo.py --demo
 ```
 
 ## Integration Options
 
-### Option 1: Standalone Script
-Keep it as-is in `/demo/` and call it from:
+### Option 1: Standalone Script (Current)
+Runs from `/demo/` and reads shared config:
 - CI/CD pipelines
 - Docker health checks
 - Manual testing scripts
+- **Uses same config as facade service**
 
 ### Option 2: Embed in Demo UI Service
 Move to `/services/demo-ui/` and:
-- Add as a backend endpoint: `POST /api/run-tests`
-- Expose via web UI with live output streaming
-- Use WebSocket for real-time test progress
+- Import `IGDemRunner` class
+- Add as backend endpoint: `POST /api/run-tests`
+- Stream output via WebSocket
+- Share config with facade via `/config/config.yaml`
 
 ### Option 3: Docker Service
-Create a dedicated test service in docker-compose:
+Add to docker-compose:
 
 ```yaml
 services:
   test-runner:
     build: ./demo
-    command: python ascii_demo.py --base-url http://fhir:8080
+    command: python ascii_demo.py
+    volumes:
+      - ./config:/config:ro  # Read shared config
     depends_on:
       - fhir-server
     profiles:
