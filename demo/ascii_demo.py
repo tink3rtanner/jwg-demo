@@ -2,6 +2,12 @@
 """
 Euridice JWG-API Sandbox - ASCII Demo Suite
 Claude-style interactive demo with visual bounces and test case execution
+
+STATUS: Standalone - makes HTTP requests to configurable base URL.
+        Designed to integrate into /services/demo-ui once the stack is built.
+        
+INTEGRATION: This follows the test cases from readme.md (T1-T5) and will
+             integrate with the planned docker-compose architecture.
 """
 
 import time

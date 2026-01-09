@@ -2,6 +2,15 @@
 
 Claude-style ASCII terminal UI for running test cases against the Euridice JWG-API sandbox.
 
+## Current Status
+
+**Standalone**: This demo currently runs independently and makes HTTP requests to any FHIR server. It doesn't depend on other code in this repo yet (since the docker-compose stack and services don't exist yet).
+
+**Future Integration**: Once the repo structure is built (docker-compose, services, config), this will integrate as:
+- Part of `/services/demo-ui` (web UI backend)
+- CI/CD smoke tests
+- Docker health check service
+
 ## Features
 
 - 🎨 Claude-style formatted output with colors and boxes
