@@ -286,3 +286,21 @@ if you want, next step i can turn this into a concrete “repo plan” with:
 	•	demo ui page map + mermaid templates
 
 (no waiting, no vibes, just files.)
+
+⸻
+
+16. ascii demo suite (implemented)
+
+a claude-style terminal ui for running test cases with visual bounces and animations:
+	•	location: /demo/ascii_demo.py
+	•	features:
+	•	claude-style formatted output (colors, boxes, code blocks)
+	•	cute visual animations (bouncing dots, spinners, success bounces)
+	•	full test suite covering t1-t5 transactions
+	•	interactive or batch execution modes
+	•	demo mode (shows ui without server connection)
+	•	usage:
+	•	python demo/ascii_demo.py --demo (preview ui)
+	•	python demo/ascii_demo.py (run against server)
+	•	python demo/ascii_demo.py --interactive (step through tests)
+	•	integration: can be embedded in /services/demo-ui or run standalone
