@@ -21,12 +21,12 @@ FAILED=0
 # Test helper functions
 test_pass() {
     echo -e "${GREEN}✓ PASS:${NC} $1"
-    ((PASSED++))
+    PASSED=$((PASSED + 1))
 }
 
 test_fail() {
     echo -e "${RED}✗ FAIL:${NC} $1"
-    ((FAILED++))
+    FAILED=$((FAILED + 1))
 }
 
 test_info() {
@@ -45,7 +45,7 @@ wait_for_service() {
             test_pass "Service ready at $url"
             return 0
         fi
-        ((attempt++))
+        attempt=$((attempt + 1))
         sleep 2
     done
     test_fail "Service not ready at $url after $max_attempts attempts"
@@ -288,12 +288,17 @@ echo "-------------------"
 # Full flow: Capability Discovery → Patient Match → Document Query → Document Retrieve
 test_info "Testing full document exchange flow..."
 
-METADATA_CHECK=$(curl -s "$API_BASE/metadata" | jq -e '.resourceType == "CapabilityStatement"')
+METADATA_OK=0
+PATIENT_OK=0
+
+curl -s "$API_BASE/metadata" | jq -e '.resourceType == "CapabilityStatement"' > /dev/null 2>&1
 if [ $? -eq 0 ]; then
-    PATIENT_CHECK=$(curl -s "$FHIR_BASE/fhir/Patient?identifier=urn:oid:2.16.840.1.113883.2.4.6.3|123456789" | jq -e '.entry | length > 0')
+    METADATA_OK=1
+    curl -s "$FHIR_BASE/fhir/Patient?identifier=urn:oid:2.16.840.1.113883.2.4.6.3|123456789" | jq -e '.entry | length > 0' > /dev/null 2>&1
     if [ $? -eq 0 ]; then
+        PATIENT_OK=1
         PAT_ID=$(curl -s "$FHIR_BASE/fhir/Patient?identifier=urn:oid:2.16.840.1.113883.2.4.6.3|123456789" | jq -r '.entry[0].resource.id')
-        DOC_CHECK=$(curl -s "$FHIR_BASE/fhir/DocumentReference?patient=Patient/$PAT_ID" | jq -e '.entry | length > 0')
+        curl -s "$FHIR_BASE/fhir/DocumentReference?patient=Patient/$PAT_ID" | jq -e '.entry | length > 0' > /dev/null 2>&1
         if [ $? -eq 0 ]; then
             test_pass "Full document exchange flow works"
         else
@@ -309,9 +314,9 @@ fi
 # Full flow: Capability Discovery → Patient Match → Resource Queries
 test_info "Testing full resource access flow..."
 
-if [ $METADATA_CHECK -eq 0 ]; then
-    if [ $PATIENT_CHECK -eq 0 ]; then
-        RESOURCE_CHECK=$(curl -s "$FHIR_BASE/fhir/Condition?patient=Patient/$PAT_ID" | jq -e '.resourceType == "Bundle"')
+if [ $METADATA_OK -eq 1 ]; then
+    if [ $PATIENT_OK -eq 1 ]; then
+        curl -s "$FHIR_BASE/fhir/Condition?patient=Patient/$PAT_ID" | jq -e '.resourceType == "Bundle"' > /dev/null 2>&1
         if [ $? -eq 0 ]; then
             test_pass "Full resource access flow works"
         else

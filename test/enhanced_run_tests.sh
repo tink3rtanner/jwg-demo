@@ -23,12 +23,12 @@ SKIPPED=0
 # Test helper functions
 test_pass() {
     echo -e "${GREEN}✓ PASS:${NC} $1"
-    ((PASSED++))
+    PASSED=$((PASSED + 1))
 }
 
 test_fail() {
     echo -e "${RED}✗ FAIL:${NC} $1"
-    ((FAILED++))
+    FAILED=$((FAILED + 1))
 }
 
 test_info() {
@@ -37,7 +37,7 @@ test_info() {
 
 test_skip() {
     echo -e "${BLUE}⊘ SKIP:${NC} $1"
-    ((SKIPPED++))
+    SKIPPED=$((SKIPPED + 1))
 }
 
 # Wait for service to be ready
@@ -51,7 +51,7 @@ wait_for_service() {
         if curl -s -f "$url" > /dev/null 2>&1; then
             return 0
         fi
-        ((attempt++))
+        attempt=$((attempt + 1))
         sleep 2
     done
     return 1
