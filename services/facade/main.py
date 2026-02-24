@@ -2,6 +2,7 @@
 JWG API Facade - Capability statement generator aligned with EU Health Data API IG
 Implements Document Access Provider and Resource Access Provider actors
 """
+import os
 import yaml
 import httpx
 from fastapi import FastAPI, HTTPException
@@ -21,14 +22,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load config
-CONFIG_PATH = Path("/app/config/config.yaml")
+# Load config - support environment variable override for non-Docker environments
+CONFIG_PATH = Path(os.environ.get("CONFIG_PATH", "/app/config/config.yaml"))
 config = {}
 if CONFIG_PATH.exists():
     with open(CONFIG_PATH, "r") as f:
         config = yaml.safe_load(f)
 
-HAPI_BASE_URL = "http://hapi-fhir:8080/fhir"
+HAPI_BASE_URL = os.environ.get("HAPI_BASE_URL", "http://hapi-fhir:8080/fhir")
 if not HAPI_BASE_URL.endswith("/"):
     HAPI_BASE_URL += "/"
 

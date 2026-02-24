@@ -19,7 +19,7 @@ def wait_for_hapi(max_retries=30):
             if response.status_code == 200:
                 print("HAPI FHIR server is ready!")
                 return True
-        except:
+        except Exception:
             pass
         time.sleep(2)
         print(f"  Retry {i+1}/{max_retries}...")

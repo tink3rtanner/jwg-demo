@@ -5,6 +5,10 @@
 
 set -e
 
+# Determine project root directory (parent of test/)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -37,17 +41,17 @@ echo "1. FILE STRUCTURE VALIDATION"
 echo "---------------------------"
 
 REQUIRED_FILES=(
-    "/workspace/docker/compose.yml"
-    "/workspace/services/facade/main.py"
-    "/workspace/services/facade/Dockerfile"
-    "/workspace/services/demo-ui/index.html"
-    "/workspace/services/demo-ui/app.js"
-    "/workspace/services/demo-ui/Dockerfile"
-    "/workspace/services/seed/seed.py"
-    "/workspace/services/seed/Dockerfile"
-    "/workspace/config/config.yaml"
-    "/workspace/examples/patient_a.json"
-    "/workspace/examples/patient_b.json"
+    "${PROJECT_ROOT}/docker/compose.yml"
+    "${PROJECT_ROOT}/services/facade/main.py"
+    "${PROJECT_ROOT}/services/facade/Dockerfile"
+    "${PROJECT_ROOT}/services/demo-ui/index.html"
+    "${PROJECT_ROOT}/services/demo-ui/app.js"
+    "${PROJECT_ROOT}/services/demo-ui/Dockerfile"
+    "${PROJECT_ROOT}/services/seed/seed.py"
+    "${PROJECT_ROOT}/services/seed/Dockerfile"
+    "${PROJECT_ROOT}/config/config.yaml"
+    "${PROJECT_ROOT}/examples/patient_a.json"
+    "${PROJECT_ROOT}/examples/patient_b.json"
 )
 
 for file in "${REQUIRED_FILES[@]}"; do
@@ -65,7 +69,7 @@ echo "2. DOCKER COMPOSE VALIDATION"
 echo "---------------------------"
 
 if command -v docker-compose &> /dev/null || command -v docker &> /dev/null; then
-    cd /workspace/docker
+    cd ${PROJECT_ROOT}/docker
     if docker compose config -q 2>/dev/null || docker-compose config -q 2>/dev/null; then
         test_pass "Docker Compose file is valid"
     else
@@ -83,13 +87,13 @@ echo "3. PYTHON SYNTAX VALIDATION"
 echo "--------------------------"
 
 if command -v python3 &> /dev/null; then
-    if python3 -m py_compile /workspace/services/facade/main.py 2>/dev/null; then
+    if python3 -m py_compile ${PROJECT_ROOT}/services/facade/main.py 2>/dev/null; then
         test_pass "Facade Python syntax is valid"
     else
         test_fail "Facade Python syntax errors"
     fi
     
-    if python3 -m py_compile /workspace/services/seed/seed.py 2>/dev/null; then
+    if python3 -m py_compile ${PROJECT_ROOT}/services/seed/seed.py 2>/dev/null; then
         test_pass "Seed Python syntax is valid"
     else
         test_fail "Seed Python syntax errors"
@@ -105,12 +109,12 @@ echo "4. YAML VALIDATION"
 echo "-----------------"
 
 if command -v python3 &> /dev/null; then
-    python3 << 'EOF'
+    python3 << EOF
 import yaml
 import sys
 
 try:
-    with open('/workspace/config/config.yaml', 'r') as f:
+    with open('${PROJECT_ROOT}/config/config.yaml', 'r') as f:
         yaml.safe_load(f)
     print("✓ PASS: Config YAML is valid")
 except Exception as e:
@@ -133,7 +137,7 @@ echo "5. JSON EXAMPLE VALIDATION"
 echo "--------------------------"
 
 if command -v jq &> /dev/null || command -v python3 &> /dev/null; then
-    for json_file in /workspace/examples/*.json; do
+    for json_file in ${PROJECT_ROOT}/examples/*.json; do
         if [ -f "$json_file" ]; then
             if command -v jq &> /dev/null; then
                 if jq empty "$json_file" 2>/dev/null; then
@@ -161,32 +165,32 @@ echo "6. IG ALIGNMENT VALIDATION"
 echo "-------------------------"
 
 # Check facade for IG keywords
-if grep -q "instantiates" /workspace/services/facade/main.py; then
+if grep -q "instantiates" ${PROJECT_ROOT}/services/facade/main.py; then
     test_pass "Facade uses 'instantiates' for priority areas"
 else
     test_fail "Facade missing 'instantiates' implementation"
 fi
 
-if grep -q "MHD ITI-67\|ITI-68\|ITI-65" /workspace/services/facade/main.py; then
+if grep -q "MHD ITI-67\|ITI-68\|ITI-65" ${PROJECT_ROOT}/services/facade/main.py; then
     test_pass "Facade references MHD transactions"
 else
     test_fail "Facade missing MHD transaction references"
 fi
 
-if grep -q "QEDm\|PCC-44" /workspace/services/facade/main.py; then
+if grep -q "QEDm\|PCC-44" ${PROJECT_ROOT}/services/facade/main.py; then
     test_pass "Facade references QEDm transactions"
 else
     test_fail "Facade missing QEDm transaction references"
 fi
 
-if grep -q "PDQm\|PIXm" /workspace/services/facade/main.py; then
+if grep -q "PDQm\|PIXm" ${PROJECT_ROOT}/services/facade/main.py; then
     test_pass "Facade references PDQm/PIXm"
 else
     test_fail "Facade missing PDQm/PIXm references"
 fi
 
 # Check no admin endpoints
-if grep -q "admin/import\|admin/export" /workspace/services/facade/main.py; then
+if grep -q "admin/import\|admin/export" ${PROJECT_ROOT}/services/facade/main.py; then
     test_fail "Facade still contains admin endpoints (should be removed)"
 else
     test_pass "Facade does not contain admin endpoints"
@@ -198,19 +202,19 @@ echo ""
 echo "7. CONFIGURATION VALIDATION"
 echo "--------------------------"
 
-if grep -q "supported_priority_areas" /workspace/config/config.yaml; then
+if grep -q "supported_priority_areas" ${PROJECT_ROOT}/config/config.yaml; then
     test_pass "Config has priority areas"
 else
     test_fail "Config missing priority areas"
 fi
 
-if grep -q "interfaces:" /workspace/config/config.yaml; then
+if grep -q "interfaces:" ${PROJECT_ROOT}/config/config.yaml; then
     test_pass "Config has interfaces section"
 else
     test_fail "Config missing interfaces section"
 fi
 
-if grep -q "supported_identifier_systems" /workspace/config/config.yaml; then
+if grep -q "supported_identifier_systems" ${PROJECT_ROOT}/config/config.yaml; then
     test_pass "Config has identifier systems"
 else
     test_fail "Config missing identifier systems"
